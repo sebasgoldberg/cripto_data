@@ -1,0 +1,12 @@
+[Unit]
+Description=Obtains the las price for ETH in DAI
+
+[Service]
+Type=simple
+User=cerebro
+WorkingDirectory={{working_dir}}
+ExecStart={{script_location}}/cripto_fetch_data.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
