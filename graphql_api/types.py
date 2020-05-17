@@ -10,6 +10,7 @@ class PriceNode(DjangoObjectType):
         model = Price
         filter_fields = {
             'currency': ['exact', ],
+            'timestamp': ['lte', 'gte', ],
         }
         interfaces = (graphene.relay.Node, )
 
