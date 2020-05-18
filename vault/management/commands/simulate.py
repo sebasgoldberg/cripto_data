@@ -35,6 +35,10 @@ class Command(BaseCommand):
         parser.add_argument('--pfactor', nargs='?', type=Decimal, 
             help="Price factor. Used with repeat. Each repetition a factor is applied to the price. Using 1.1 a 10% increase is applyed by repetition", 
             default=1)
+        parser.add_argument('--pinitfactor', nargs='?', type=Decimal, 
+            help="Initial price factor.", 
+            default=1)
+
 
     def print_state(self, text, vault: Vault, wallet: Wallet, price: ColateralPrice):
         self.stdout.write("-" * 40)
@@ -45,7 +49,7 @@ class Command(BaseCommand):
         self.stdout.write("Total in DAI: {}".format(vault.get_value() + wallet.dai))
         self.stdout.write("-" * 40)
 
-    def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, repeat, pfactor, *args, **kwargs):
+    def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, repeat, pfactor, pinitfactor, *args, **kwargs):
         """
         Liquidation Price = Dai Debt*1.5/ETH colateral
         Risk = Dai Debt*ETH colateral/ETH Price
@@ -67,9 +71,11 @@ class Command(BaseCommand):
         vault = Vault(wallet, vc, vd)
         strategy = Strategy(vault, ll, tll, tul, ul)
 
+        factor = pinitfactor
+        colateral_price.set_factor(factor)
+        
         self.print_state("Before simulation", vault, wallet, colateral_price)
 
-        factor = 1
         for i in range(repeat):
             colateral_price.set_factor(factor)
             strategy.simulate(q)
