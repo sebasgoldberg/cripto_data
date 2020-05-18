@@ -148,7 +148,12 @@ class Strategy:
             self.vault.wallet.buy_colateral(collateral_to_buy)
             self.vault.deposit_colateral(collateral_to_buy)
         except BuyColateralException as e:
-            print(e)
+            # TODO IMPORTANTE: Agregar notificación.
+            # Significa que no se pudo comprar colateral, lo que implica que no se pudo
+            # aumentar el riesgo de liquidación. Si el problema continúa podría llegar
+            # al precio de liquidación.
+            pass
+
 
     def get_risk_upper_limit(self):
         return self.risk_upper_limit * self.vault.min_ratio
