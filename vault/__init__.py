@@ -11,14 +11,15 @@ class ColateralPrice:
             ColateralPrice.instance = ColateralPrice()
         return ColateralPrice.instance
 
-    def __init__(self, price=None):
+    def __init__(self, price=None, factor=Decimal(1)):
         self.price = price
+        self.factor = factor
 
     def set_price(self, price):
         self.price = price
 
     def get_price(self):
-        return self.price.price
+        return self.price.price * self.factor
 
     def get_buy_price(self):
         # Cuando uno quiere comprar tiene que pagar un poco más caro que en el precio de mercado.
@@ -26,7 +27,15 @@ class ColateralPrice:
 
     def get_timestamp(self):
         return self.price.timestamp
+    
+    def set_factor(self, factor):
+        self.factor = factor
 
+class BuyColateralException(Exception):
+    pass
+
+class WithdrawColateralException(Exception):
+    pass
 
 class Wallet:
 
@@ -42,7 +51,7 @@ class Wallet:
     def buy_colateral(self, colateral_ammount):
         dai_ammount = colateral_ammount * ColateralPrice.get_instance().get_buy_price()
         if dai_ammount > self.dai:
-            raise Exception("DAI ammount in the wallet ({}), is lower than the DAI ammount required ({}), to buy {} ammount of colateral.".format(
+            raise BuyColateralException("DAI ammount in the wallet ({}), is lower than the DAI ammount required ({}), to buy {} ammount of colateral.".format(
                 self.dai, dai_ammount, colateral_ammount
             ))
         self.colateral += colateral_ammount
@@ -135,8 +144,11 @@ class Strategy:
 
     def buy_colateral(self):
         collateral_to_buy = self.vault.get_colateral_needed_to_achieve_risk(self.get_risk_target_lower_limit())
-        self.vault.wallet.buy_colateral(collateral_to_buy)
-        self.vault.deposit_colateral(collateral_to_buy)
+        try:
+            self.vault.wallet.buy_colateral(collateral_to_buy)
+            self.vault.deposit_colateral(collateral_to_buy)
+        except BuyColateralException as e:
+            print(e)
 
     def get_risk_upper_limit(self):
         return self.risk_upper_limit * self.vault.min_ratio
