@@ -43,7 +43,7 @@ class Wallet:
         dai_ammount = colateral_ammount * ColateralPrice.get_instance().get_buy_price()
         if dai_ammount > self.dai:
             raise Exception("DAI ammount in the wallet ({}), is lower than the DAI ammount required ({}), to buy {} ammount of colateral.".format(
-                [self.dai, dai_ammount, colateral_ammount]
+                self.dai, dai_ammount, colateral_ammount
             ))
         self.colateral += colateral_ammount
         self.dai -= dai_ammount
@@ -51,7 +51,7 @@ class Wallet:
     def withdraw_colateral(self, ammount):
         if ammount > self.colateral:
             raise Exception("Withdraw of colateral ammount {} is higher than the colateral ammount {} in wallet.".format(
-                [ammount, self.colateral]
+                ammount, self.colateral
             ))
         self.colateral -= ammount
 
@@ -101,7 +101,7 @@ class Vault:
 
     def emit_dai(self, dai_ammount):
         if self.is_in_liquidation_state(dai_ammount):
-            raise Exception("The DAI ammount to emit ({}) will generate a liquidation")
+            raise Exception("The DAI ammount to emit ({}) will generate a liquidation".format(dai_ammount))
         self.dai_debt += dai_ammount
         self.wallet.deposit_dai(dai_ammount)
         print('{}: {}: DAI emmited: {}'.format(

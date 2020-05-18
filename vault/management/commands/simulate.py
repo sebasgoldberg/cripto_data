@@ -29,6 +29,9 @@ class Command(BaseCommand):
         parser.add_argument('--wd', nargs='?', type=Decimal, help="Wallet initial DAI", default=Decimal(1470))
         parser.add_argument('--vc', nargs='?', type=Decimal, help="Vault initial locked colateral", default=Decimal(22))
         parser.add_argument('--vd', nargs='?', type=Decimal, help="Vault initial DAI debt", default=Decimal(1470))
+        parser.add_argument('--repeat', nargs='?', type=int, 
+            help="Repeat simulation n times using as input in the i-th simulation, the (i-1)-th simulation", 
+            default=1)
 
     def print_state(self, text, vault: Vault, wallet: Wallet, price):
         self.stdout.write("-" * 40)
@@ -39,7 +42,7 @@ class Command(BaseCommand):
         self.stdout.write("Total in DAI: {}".format(vault.get_value() + wallet.dai))
         self.stdout.write("-" * 40)
 
-    def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, *args, **kwargs):
+    def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, repeat, *args, **kwargs):
         """
         Liquidation Price = Dai Debt*1.5/ETH colateral
         Risk = Dai Debt*ETH colateral/ETH Price
@@ -63,7 +66,8 @@ class Command(BaseCommand):
 
         self.print_state("Before simulation", vault, wallet, q.first())
 
-        strategy.simulate(q)
+        for i in range(repeat):
+            strategy.simulate(q)
 
         self.print_state("After simulation", vault, wallet, q.last())
 
