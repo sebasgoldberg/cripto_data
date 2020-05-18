@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'fetch_data',
     'graphql_api',
+    'vault',
 ]
 
 MIDDLEWARE = [
