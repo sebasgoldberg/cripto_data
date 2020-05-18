@@ -11,18 +11,21 @@ class ColateralPrice:
             ColateralPrice.instance = ColateralPrice()
         return ColateralPrice.instance
 
-    def __init__(self, price=Decimal(0)):
+    def __init__(self, price=None):
         self.price = price
 
     def set_price(self, price):
         self.price = price
 
     def get_price(self):
-        return self.price
+        return self.price.price
 
     def get_buy_price(self):
         # Cuando uno quiere comprar tiene que pagar un poco más caro que en el precio de mercado.
         return self.get_price()
+
+    def get_timestamp(self):
+        return self.price.timestamp
 
 
 class Wallet:
@@ -58,11 +61,11 @@ class Wallet:
 
 class Vault:
 
-    def __init__(self, wallet: Wallet, colateral_locked, dai_debt, colateral_price: ColateralPrice, min_ratio=Decimal(1.5)):
+    def __init__(self, wallet: Wallet, colateral_locked, dai_debt, min_ratio=Decimal(1.5)):
         self.wallet = wallet
         self.colateral = colateral_locked
         self.dai_debt = dai_debt
-        self.colateral_price = colateral_price
+        self.colateral_price = ColateralPrice.get_instance()
         self.min_ratio = min_ratio
 
     def __str__(self):
@@ -87,7 +90,11 @@ class Vault:
     def deposit_colateral(self, colateral_ammount):
         self.wallet.withdraw_colateral(colateral_ammount)
         self.colateral += colateral_ammount
-        print('{}: Colateral deposited: {}'.format(self.colateral_price.get_price(), colateral_ammount))
+        print('{}: {}: Colateral deposited: {}'.format(
+            self.colateral_price.get_timestamp(),
+            self.colateral_price.get_price(),
+            colateral_ammount
+            ))
 
     def is_in_liquidation_state(self, dai_to_emit=Decimal(0)):
         return self.get_risk(dai_to_emit) <= self.min_ratio
@@ -97,7 +104,11 @@ class Vault:
             raise Exception("The DAI ammount to emit ({}) will generate a liquidation")
         self.dai_debt += dai_ammount
         self.wallet.deposit_dai(dai_ammount)
-        print('{}: DAI emmited: {}'.format(self.colateral_price.get_price(), dai_ammount))
+        print('{}: {}: DAI emmited: {}'.format(
+            self.colateral_price.get_timestamp(),
+            self.colateral_price.get_price(),
+            dai_ammount
+            ))
 
 
 class Strategy:
@@ -144,7 +155,8 @@ class Strategy:
         elif self.vault.get_risk() > self.get_risk_upper_limit():
             self.emit_dai()
 
-    def simulate(self, prices_queryset, colateral_price: ColateralPrice):
+    def simulate(self, prices_queryset):
+        colateral_price = ColateralPrice.get_instance()
         for price in prices_queryset:
-            colateral_price.set_price(price.price)
+            colateral_price.set_price(price)
             self.step()

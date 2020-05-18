@@ -35,7 +35,7 @@ class Command(BaseCommand):
         self.stdout.write(text)
         self.stdout.write("Vault: {}".format(str(vault)))
         self.stdout.write("Wallet: {}".format(str(wallet)))
-        self.stdout.write("Colateral price: {}".format(price.price))
+        self.stdout.write("Colateral price: {}: {}".format(price.timestamp, price.price))
         self.stdout.write("Total in DAI: {}".format(vault.get_value() + wallet.dai))
         self.stdout.write("-" * 40)
 
@@ -56,13 +56,14 @@ class Command(BaseCommand):
         q = Price.objects.filter(currency=currency)
 
         wallet = Wallet(wc, wd)
-        colateral_price = ColateralPrice(q.first().price)
-        vault = Vault(wallet, vc, vd, colateral_price)
+        colateral_price = ColateralPrice.get_instance()
+        colateral_price.set_price(q.first())
+        vault = Vault(wallet, vc, vd)
         strategy = Strategy(vault, ll, tll, tul, ul)
 
         self.print_state("Before simulation", vault, wallet, q.first())
 
-        strategy.simulate(q, colateral_price)
+        strategy.simulate(q)
 
         self.print_state("After simulation", vault, wallet, q.last())
 
