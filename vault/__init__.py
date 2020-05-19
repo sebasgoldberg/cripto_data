@@ -126,7 +126,8 @@ class Strategy:
         risk_lower_limit=Decimal(1.3),
         risk_target_lower_limit=Decimal(1.35),
         risk_target_upper_limit=Decimal(1.35),
-        risk_upper_limit=Decimal(1.4)
+        risk_upper_limit=Decimal(1.4),
+        max_colateral_price=None
         ):
 
         self.vault = vault
@@ -134,6 +135,7 @@ class Strategy:
         self.risk_target_lower_limit = risk_target_lower_limit
         self.risk_target_upper_limit = risk_target_upper_limit
         self.risk_upper_limit = risk_upper_limit
+        self.max_colateral_price = max_colateral_price
 
     
     def get_risk_lower_limit(self):
@@ -143,7 +145,13 @@ class Strategy:
         return self.risk_target_lower_limit * self.vault.min_ratio
 
     def buy_colateral(self):
+        
+        if self.max_colateral_price is not None:
+            if ColateralPrice.get_instance().get_buy_price() > self.max_colateral_price:
+                return
+
         collateral_to_buy = self.vault.get_colateral_needed_to_achieve_risk(self.get_risk_target_lower_limit())
+
         try:
             self.vault.wallet.buy_colateral(collateral_to_buy)
             self.vault.deposit_colateral(collateral_to_buy)

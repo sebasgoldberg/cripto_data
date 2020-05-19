@@ -38,6 +38,9 @@ class Command(BaseCommand):
         parser.add_argument('--pinitfactor', nargs='?', type=Decimal, 
             help="Initial price factor.", 
             default=1)
+        parser.add_argument('--maxbuyprice', nargs='?', type=Decimal, 
+            help="Maximum price to buy colateral. Above this price will not be buyed collateral", 
+            default=None)
 
 
     def print_state(self, text, vault: Vault, wallet: Wallet, price: ColateralPrice):
@@ -49,7 +52,7 @@ class Command(BaseCommand):
         self.stdout.write("Total in DAI: {}".format(vault.get_value() + wallet.dai))
         self.stdout.write("-" * 40)
 
-    def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, repeat, pfactor, pinitfactor, *args, **kwargs):
+    def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, repeat, pfactor, pinitfactor, maxbuyprice, *args, **kwargs):
         """
         Liquidation Price = Dai Debt*1.5/ETH colateral
         Risk = Dai Debt*ETH colateral/ETH Price
@@ -69,11 +72,11 @@ class Command(BaseCommand):
         colateral_price = ColateralPrice.get_instance()
         colateral_price.set_price(q.first())
         vault = Vault(wallet, vc, vd)
-        strategy = Strategy(vault, ll, tll, tul, ul)
+        strategy = Strategy(vault, ll, tll, tul, ul, maxbuyprice)
 
         factor = pinitfactor
         colateral_price.set_factor(factor)
-        
+
         self.print_state("Before simulation", vault, wallet, colateral_price)
 
         for i in range(repeat):
