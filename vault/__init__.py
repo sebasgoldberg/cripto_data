@@ -1,15 +1,15 @@
 
 from decimal import Decimal
 
-class ColateralPrice:
+class CollateralPrice:
 
     instance = None
 
     @staticmethod
     def get_instance():
-        if ColateralPrice.instance is None:
-            ColateralPrice.instance = ColateralPrice()
-        return ColateralPrice.instance
+        if CollateralPrice.instance is None:
+            CollateralPrice.instance = CollateralPrice()
+        return CollateralPrice.instance
 
     def __init__(self, price=None, factor=Decimal(1)):
         self.price = price
@@ -31,38 +31,38 @@ class ColateralPrice:
     def set_factor(self, factor):
         self.factor = factor
 
-class BuyColateralException(Exception):
+class BuyCollateralException(Exception):
     pass
 
-class WithdrawColateralException(Exception):
+class WithdrawCollateralException(Exception):
     pass
 
 class Wallet:
 
-    def __init__(self, colateral_ammount, dai_ammount):
-        self.colateral = colateral_ammount
+    def __init__(self, collateral_ammount, dai_ammount):
+        self.collateral = collateral_ammount
         self.dai = dai_ammount
 
     def __str__(self):
-        return "Colateral: {}, DAI: {}".format(
-            self.colateral, self.dai
+        return "Collateral: {}, DAI: {}".format(
+            self.collateral, self.dai
         )
 
-    def buy_colateral(self, colateral_ammount):
-        dai_ammount = colateral_ammount * ColateralPrice.get_instance().get_buy_price()
+    def buy_collateral(self, collateral_ammount):
+        dai_ammount = collateral_ammount * CollateralPrice.get_instance().get_buy_price()
         if dai_ammount > self.dai:
-            raise BuyColateralException("DAI ammount in the wallet ({}), is lower than the DAI ammount required ({}), to buy {} ammount of colateral.".format(
-                self.dai, dai_ammount, colateral_ammount
+            raise BuyCollateralException("DAI ammount in the wallet ({}), is lower than the DAI ammount required ({}), to buy {} ammount of collateral.".format(
+                self.dai, dai_ammount, collateral_ammount
             ))
-        self.colateral += colateral_ammount
+        self.collateral += collateral_ammount
         self.dai -= dai_ammount
 
-    def withdraw_colateral(self, ammount):
-        if ammount > self.colateral:
-            raise Exception("Withdraw of colateral ammount {} is higher than the colateral ammount {} in wallet.".format(
-                ammount, self.colateral
+    def withdraw_collateral(self, ammount):
+        if ammount > self.collateral:
+            raise Exception("Withdraw of collateral ammount {} is higher than the collateral ammount {} in wallet.".format(
+                ammount, self.collateral
             ))
-        self.colateral -= ammount
+        self.collateral -= ammount
 
     def deposit_dai(self, ammount):
         self.dai += ammount
@@ -70,39 +70,39 @@ class Wallet:
 
 class Vault:
 
-    def __init__(self, wallet: Wallet, colateral_locked, dai_debt, min_ratio=Decimal(1.5)):
+    def __init__(self, wallet: Wallet, collateral_locked, dai_debt, min_ratio=Decimal(1.5)):
         self.wallet = wallet
-        self.colateral = colateral_locked
+        self.collateral = collateral_locked
         self.dai_debt = dai_debt
-        self.colateral_price = ColateralPrice.get_instance()
+        self.collateral_price = CollateralPrice.get_instance()
         self.min_ratio = min_ratio
 
     def __str__(self):
-        return "Colateral locked: {}, Dai debt: {}, Risk: {}, Value in DAI: {}".format(
-            self.colateral, self.dai_debt, self.get_risk(), self.get_value()
+        return "Collateral locked: {}, Dai debt: {}, Risk: {}, Value in DAI: {}".format(
+            self.collateral, self.dai_debt, self.get_risk(), self.get_value()
         )
 
-    def get_colateral_needed_to_achieve_risk(self, risk_to_achive):
-        return risk_to_achive * self.dai_debt / self.colateral_price.get_price() - self.colateral
+    def get_collateral_needed_to_achieve_risk(self, risk_to_achive):
+        return risk_to_achive * self.dai_debt / self.collateral_price.get_price() - self.collateral
 
     def get_dai_emission_to_achieve_risk(self, risk_to_achive):
-        return self.colateral * self.colateral_price.get_price() / risk_to_achive - self.dai_debt
+        return self.collateral * self.collateral_price.get_price() / risk_to_achive - self.dai_debt
 
     def get_risk(self, dai_to_emit=Decimal(0)):
-        # Risk = Dai Debt*ETH colateral/ETH Price
+        # Risk = Dai Debt*ETH collateral/ETH Price
         dai_debt = self.dai_debt + dai_to_emit
-        return self.colateral * self.colateral_price.get_price() / dai_debt
+        return self.collateral * self.collateral_price.get_price() / dai_debt
 
     def get_value(self):
-        return self.colateral * self.colateral_price.get_price() - self.dai_debt
+        return self.collateral * self.collateral_price.get_price() - self.dai_debt
 
-    def deposit_colateral(self, colateral_ammount):
-        self.wallet.withdraw_colateral(colateral_ammount)
-        self.colateral += colateral_ammount
-        print('{}: {}: Colateral deposited: {}'.format(
-            self.colateral_price.get_timestamp(),
-            self.colateral_price.get_price(),
-            colateral_ammount
+    def deposit_collateral(self, collateral_ammount):
+        self.wallet.withdraw_collateral(collateral_ammount)
+        self.collateral += collateral_ammount
+        print('{}: {}: Collateral deposited: {}'.format(
+            self.collateral_price.get_timestamp(),
+            self.collateral_price.get_price(),
+            collateral_ammount
             ))
 
     def is_in_liquidation_state(self, dai_to_emit=Decimal(0)):
@@ -114,8 +114,8 @@ class Vault:
         self.dai_debt += dai_ammount
         self.wallet.deposit_dai(dai_ammount)
         print('{}: {}: DAI emmited: {}'.format(
-            self.colateral_price.get_timestamp(),
-            self.colateral_price.get_price(),
+            self.collateral_price.get_timestamp(),
+            self.collateral_price.get_price(),
             dai_ammount
             ))
 
@@ -127,7 +127,7 @@ class Strategy:
         risk_target_lower_limit=Decimal(1.35),
         risk_target_upper_limit=Decimal(1.35),
         risk_upper_limit=Decimal(1.4),
-        max_colateral_price=None
+        max_collateral_price=None
         ):
 
         self.vault = vault
@@ -135,7 +135,7 @@ class Strategy:
         self.risk_target_lower_limit = risk_target_lower_limit
         self.risk_target_upper_limit = risk_target_upper_limit
         self.risk_upper_limit = risk_upper_limit
-        self.max_colateral_price = max_colateral_price
+        self.max_collateral_price = max_collateral_price
 
     
     def get_risk_lower_limit(self):
@@ -144,20 +144,20 @@ class Strategy:
     def get_risk_target_lower_limit(self):
         return self.risk_target_lower_limit * self.vault.min_ratio
 
-    def buy_colateral(self):
+    def buy_collateral(self):
         
-        if self.max_colateral_price is not None:
-            if ColateralPrice.get_instance().get_buy_price() > self.max_colateral_price:
+        if self.max_collateral_price is not None:
+            if CollateralPrice.get_instance().get_buy_price() > self.max_collateral_price:
                 return
 
-        collateral_to_buy = self.vault.get_colateral_needed_to_achieve_risk(self.get_risk_target_lower_limit())
+        collateral_to_buy = self.vault.get_collateral_needed_to_achieve_risk(self.get_risk_target_lower_limit())
 
         try:
-            self.vault.wallet.buy_colateral(collateral_to_buy)
-            self.vault.deposit_colateral(collateral_to_buy)
-        except BuyColateralException as e:
+            self.vault.wallet.buy_collateral(collateral_to_buy)
+            self.vault.deposit_collateral(collateral_to_buy)
+        except BuyCollateralException as e:
             # TODO IMPORTANTE: Agregar notificación.
-            # Significa que no se pudo comprar colateral, lo que implica que no se pudo
+            # Significa que no se pudo comprar collateral, lo que implica que no se pudo
             # aumentar el riesgo de liquidación. Si el problema continúa podría llegar
             # al precio de liquidación.
             pass
@@ -176,12 +176,12 @@ class Strategy:
     def step(self):
 
         if self.vault.get_risk() < self.get_risk_lower_limit():
-            self.buy_colateral()
+            self.buy_collateral()
         elif self.vault.get_risk() > self.get_risk_upper_limit():
             self.emit_dai()
 
     def simulate(self, prices_queryset):
-        colateral_price = ColateralPrice.get_instance()
+        collateral_price = CollateralPrice.get_instance()
         for price in prices_queryset:
-            colateral_price.set_price(price)
+            collateral_price.set_price(price)
             self.step()

@@ -25,9 +25,9 @@ class Command(BaseCommand):
         parser.add_argument('--tll', nargs='?', type=Decimal, help="Risk target lower limit", default=Decimal(1.35))
         parser.add_argument('--tul', nargs='?', type=Decimal, help="Risk target upper limit", default=Decimal(1.35))
         parser.add_argument('--ul', nargs='?', type=Decimal, help="Risk upper limit", default=Decimal(1.4))
-        parser.add_argument('--wc', nargs='?', type=Decimal, help="Wallet initial colateral", default=Decimal(0))
+        parser.add_argument('--wc', nargs='?', type=Decimal, help="Wallet initial collateral", default=Decimal(0))
         parser.add_argument('--wd', nargs='?', type=Decimal, help="Wallet initial DAI", default=Decimal(1470))
-        parser.add_argument('--vc', nargs='?', type=Decimal, help="Vault initial locked colateral", default=Decimal(22))
+        parser.add_argument('--vc', nargs='?', type=Decimal, help="Vault initial locked collateral", default=Decimal(22))
         parser.add_argument('--vd', nargs='?', type=Decimal, help="Vault initial DAI debt", default=Decimal(1470))
         parser.add_argument('--repeat', nargs='?', type=int, 
             help="Repeat simulation n times using as input in the i-th simulation, the (i-1)-th simulation", 
@@ -39,23 +39,23 @@ class Command(BaseCommand):
             help="Initial price factor.", 
             default=1)
         parser.add_argument('--maxbuyprice', nargs='?', type=Decimal, 
-            help="Maximum price to buy colateral. Above this price will not be buyed collateral", 
+            help="Maximum price to buy collateral. Above this price will not be buyed collateral", 
             default=None)
 
 
-    def print_state(self, text, vault: Vault, wallet: Wallet, price: ColateralPrice):
+    def print_state(self, text, vault: Vault, wallet: Wallet, price: CollateralPrice):
         self.stdout.write("-" * 40)
         self.stdout.write(text)
         self.stdout.write("Vault: {}".format(str(vault)))
         self.stdout.write("Wallet: {}".format(str(wallet)))
-        self.stdout.write("Colateral price: {}: {}".format(price.get_timestamp(), price.get_price()))
+        self.stdout.write("Collateral price: {}: {}".format(price.get_timestamp(), price.get_price()))
         self.stdout.write("Total in DAI: {}".format(vault.get_value() + wallet.dai))
         self.stdout.write("-" * 40)
 
     def simulate(self, currency, ll, tll, tul, ul, wc, wd, vc, vd, repeat, pfactor, pinitfactor, maxbuyprice, *args, **kwargs):
         """
-        Liquidation Price = Dai Debt*1.5/ETH colateral
-        Risk = Dai Debt*ETH colateral/ETH Price
+        Liquidation Price = Dai Debt*1.5/ETH collateral
+        Risk = Dai Debt*ETH collateral/ETH Price
         Minimum ratio: Si Risk <= Minimum ratio, quiere decir que llegamos al Liquidation Price.
 
         La idea es la siguiente:
@@ -69,22 +69,22 @@ class Command(BaseCommand):
         q = Price.objects.filter(currency=currency)
 
         wallet = Wallet(wc, wd)
-        colateral_price = ColateralPrice.get_instance()
-        colateral_price.set_price(q.first())
+        collateral_price = CollateralPrice.get_instance()
+        collateral_price.set_price(q.first())
         vault = Vault(wallet, vc, vd)
         strategy = Strategy(vault, ll, tll, tul, ul, maxbuyprice)
 
         factor = pinitfactor
-        colateral_price.set_factor(factor)
+        collateral_price.set_factor(factor)
 
-        self.print_state("Before simulation", vault, wallet, colateral_price)
+        self.print_state("Before simulation", vault, wallet, collateral_price)
 
         for i in range(repeat):
-            colateral_price.set_factor(factor)
+            collateral_price.set_factor(factor)
             strategy.simulate(q)
             factor = factor * pfactor
 
-        self.print_state("After simulation", vault, wallet, colateral_price)
+        self.print_state("After simulation", vault, wallet, collateral_price)
 
             
     def handle(self, *args, **options):
