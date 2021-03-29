@@ -21,7 +21,7 @@ promise==2.3
 prompt-toolkit==3.0.5
 psycopg2==2.8.5
 ptyprocess==0.6.0
-Pygments==2.6.1
+Pygments==2.7.4
 pytz==2020.1
 requests==2.23.0
 Rx==1.6.1
